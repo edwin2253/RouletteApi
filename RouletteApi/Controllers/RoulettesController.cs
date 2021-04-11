@@ -86,5 +86,40 @@ namespace RouletteApi.Controllers
         {
             return _context.Roulettes.Any(e => e.Id == id);
         }
+        [HttpGet("Open/{id}")] // GET: api/Roulettes/Open
+        public async Task<IActionResult> OpenRoulette(long id, Roulette roulette)
+        {
+            if (id < 1)
+            {
+                return BadRequest();
+            }
+            var rouletteSelected = await _context.Roulettes.FindAsync(id);
+            if (rouletteSelected.IsOpen)
+            {
+                return Ok("Denied");
+            }
+            else
+            {
+                rouletteSelected.IsOpen = true;
+                roulette.Game++;
+                _context.Entry(rouletteSelected).State = EntityState.Modified;
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!RouletteExists(id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return Ok("Successful");
+            }
+        }
     }
 }

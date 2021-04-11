@@ -15,8 +15,12 @@ namespace RouletteApi.Controllers
     public class BetsController : ControllerBase
     {
         private readonly BetContext _context;
-        public BetsController(BetContext context)
+        private readonly UserContext _contextUser;
+        private readonly RouletteContext _contextRoulette;
+        public BetsController(BetContext context, UserContext contextUser, RouletteContext contextRoulette)
         {
+            _contextUser = contextUser;
+            _contextRoulette = contextRoulette;
             _context = context;
         }        
         [HttpGet] // GET: api/Bets
@@ -64,10 +68,35 @@ namespace RouletteApi.Controllers
         [HttpPost] // POST: api/Bets
         public async Task<ActionResult<Bet>> PostBet(Bet bet)
         {
-            _context.Bets.Add(bet);
-            await _context.SaveChangesAsync();
+            var user = await _contextUser.Users.FindAsync(bet.IdUser);
+            var roulette = await _contextRoulette.Roulettes.FindAsync(bet.IdRoullete);
+            if(bet == null || user == null || roulette == null) return BadRequest();
+            if (bet.Value < user.Money)
+            {
+                if (bet.Game == roulette.Game && roulette.IsOpen)
+                {
+                    if (bet.Number >= 0 && bet.Number <= 0)
+                    {
+                        _context.Bets.Add(bet);
+                        await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetBet", new { id = bet.Id }, bet);
+                        return CreatedAtAction("GetBet", new { id = bet.Id }, bet);
+                    }
+                    else
+                    {
+                        return Ok("Invalid Number");
+                    }
+                    
+                }
+                else
+                {
+                    return Ok("Invalid Game");
+                }
+            }
+            else
+            {
+                return Ok("User without enough money");
+            }        
         }
         [HttpDelete("{id}")] // DELETE: api/Bets
         public async Task<ActionResult<Bet>> DeleteBet(long id)
@@ -82,7 +111,6 @@ namespace RouletteApi.Controllers
 
             return bet;
         }
-
         private bool BetExists(long id)
         {
             return _context.Bets.Any(e => e.Id == id);
