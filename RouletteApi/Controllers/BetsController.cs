@@ -68,35 +68,21 @@ namespace RouletteApi.Controllers
         [HttpPost] // POST: api/Bets
         public async Task<ActionResult<Bet>> PostBet(Bet bet)
         {
+            if (bet == null) return BadRequest();
             var user = await _contextUser.Users.FindAsync(bet.IdUser);
             var roulette = await _contextRoulette.Roulettes.FindAsync(bet.IdRoullete);
-            if(bet == null || user == null || roulette == null) return BadRequest();
-            if (bet.Value < user.Money)
+            string validation = ValidateBet(bet, user, roulette);
+            if (string.IsNullOrEmpty(validation))
             {
-                if (bet.Game == roulette.Game && roulette.IsOpen)
-                {
-                    if (bet.Number >= 0 && bet.Number <= 0)
-                    {
-                        _context.Bets.Add(bet);
-                        await _context.SaveChangesAsync();
+                _context.Bets.Add(bet);
+                await _context.SaveChangesAsync();
 
-                        return CreatedAtAction("GetBet", new { id = bet.Id }, bet);
-                    }
-                    else
-                    {
-                        return Ok("Invalid Number");
-                    }
-                    
-                }
-                else
-                {
-                    return Ok("Invalid Game");
-                }
+                return CreatedAtAction("GetBet", new { id = bet.Id }, bet);
             }
             else
             {
-                return Ok("User without enough money");
-            }        
+                return Ok(validation);
+            }             
         }
         [HttpDelete("{id}")] // DELETE: api/Bets
         public async Task<ActionResult<Bet>> DeleteBet(long id)
@@ -114,6 +100,18 @@ namespace RouletteApi.Controllers
         private bool BetExists(long id)
         {
             return _context.Bets.Any(e => e.Id == id);
+        }
+        private string ValidateBet(Bet bet, User user, Roulette roulette)
+        {
+            if (user == null) return "Invalid user";
+            if (roulette == null) return "Invalid roulette";
+            if (!(bet.Value < user.Money)) return "User without enough money";
+            if (!(bet.Value > 0 && bet.Value <= 10000)) return "Invalid bet value";
+            if (!(bet.Game == roulette.Game)) return "Invalid game";
+            if (!(roulette.IsOpen)) return "Roulette is closed";
+            if (!(bet.Number >= 0 && bet.Number <= 36)) return "Invalid bet number";
+            if (!(bet.Color == "b" || bet.Color == "r" || bet.Color == "")) return "Invalid bet color";
+            return "";
         }
     }
 }
