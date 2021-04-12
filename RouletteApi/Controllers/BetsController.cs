@@ -74,6 +74,16 @@ namespace RouletteApi.Controllers
             string validation = ValidateBet(bet, user, roulette);
             if (string.IsNullOrEmpty(validation))
             {
+                user.Money -= bet.Value;
+                _contextUser.Entry(user).State = EntityState.Modified;
+                try
+                {
+                    await _contextUser.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    return NotFound();
+                }
                 _context.Bets.Add(bet);
                 await _context.SaveChangesAsync();
 
