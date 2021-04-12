@@ -8,6 +8,7 @@ Process to play
 - Add bets with roulette id, user id, roulette game id, bet value, bet roulette number, bet roulette color
 
 //////////////////////////////////////////////////////////
+
 1. Roulette create
 
   POST: https://localhost:44379/api/Roulettes
@@ -19,12 +20,14 @@ Process to play
         }
 
 //////////////////////////////////////////////////////////
+
 2. Open Roulette
 
   GET: https://localhost:44379/api/Roulettes/Open/{id}
 
 //////////////////////////////////////////////////////////
-3. Bet
+
+3. Add Bet
   
   POST: https://localhost:44379/api/Bets
   
@@ -39,16 +42,19 @@ Process to play
         }
   
 //////////////////////////////////////////////////////////
+
 4. Close Roulette
 
   GET: https://localhost:44379/api/Roulettes/Close/{id}
 
 //////////////////////////////////////////////////////////
+
 5. Roulettes list
 
   GET: https://localhost:44379/api/Roulettes
 
 //////////////////////////////////////////////////////////
+
 6. Create User
   
   POST: https://localhost:44379/api/Users
